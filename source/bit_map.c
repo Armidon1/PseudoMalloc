@@ -32,7 +32,12 @@ void BitMap_setBit(BitMap* bit_map, int bit_num, int status){
 }
 
 // inspects the status of the bit bit_num
-int BitMap_bit(const BitMap* bit_map, int bit_num);
+int BitMap_bit(const BitMap* bit_map, int bit_num){
+  int byte_num=bit_num>>3;            //bit_num/8 = which byte is 
+  assert(byte_num<bit_map->buffer_size);  //check if we are inside the buffer
+  int bit_in_byte= bit_num % 8; //finding which bit is inside the byte;
+  return (bit_map->buffer[byte_num] & (1<<bit_in_byte))!=0;
+}
 
 // print the entire bitmap
 void BitMap_print(BitMap* bit_map){
