@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <string.h>
 #include "../headers/bit_map.h"
 
 // returns the number of bytes to store bits booleans
@@ -13,6 +14,7 @@ void BitMap_init(BitMap* bit_map, int num_bits, uint8_t* buffer){
   bit_map->buffer=buffer;
   bit_map->num_bits=num_bits;
   bit_map->buffer_size=BitMap_getBytes(num_bits);
+  memset(bit_map->buffer, 0, bit_map->buffer_size); //clear the buffer
 }
 
 // sets a the bit bit_num in the bitmap
@@ -25,7 +27,7 @@ int BitMap_bit(const BitMap* bit_map, int bit_num);
 // print the entire bitmap
 void BitMap_print(BitMap* bit_map){
   printf("BitMap: ");
-  for (int i=0; i<bit_map->numbits; i++){
+  for (int i=0; i<bit_map->num_bits; i++){
     int byte_num = i / 8; //I take the byte cell
     int bit_in_byte = 7 - (i % 8);  //i take the extra bits, in particular im iterating the byte from left to right: needed for a correct print
     int bit = (bit_map->buffer[byte_num] >> bit_in_byte) & 1; 
