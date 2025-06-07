@@ -15,6 +15,19 @@ int main(){
     printf("testing BitMap_print\n");
     BitMap_print(&bm);
 
-    
+    //testing bitmap_setBit and bitmap_bit
+    printf("testing BitMap_setbit and BitMap_bit\n");
+    int position =3;
+    int status=1;
+    printf("setting bit position=%d to status=%d\n", position, status);
+    BitMap_setBit(&bm, position, status);
+    printf("bit value: %d\n", BitMap_bit(&bm, position));
+    BitMap_print(&bm);
+    status=0;
+    printf("setting bit position=%d to status=%d\n", position, status);
+    BitMap_setBit(&bm, position, status);
+    printf("bit value: %d\n", BitMap_bit(&bm, position));
+    BitMap_print(&bm);
+
     return 0;
 }
