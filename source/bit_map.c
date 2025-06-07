@@ -8,7 +8,7 @@ int BitMap_getBytes(int bits){
   return bytes;
 }
 
-// initializes a bitmap on an external array
+// initializes a bitmap on an external array. it just fills the struct with its own values
 void BitMap_init(BitMap* bit_map, int num_bits, uint8_t* buffer){
   bit_map->buffer=buffer;
   bit_map->num_bits=num_bits;
@@ -23,4 +23,13 @@ void BitMap_setBit(BitMap* bit_map, int bit_num, int status);
 int BitMap_bit(const BitMap* bit_map, int bit_num);
 
 // print the entire bitmap
-void BitMap_print(BitMap* bit_map);
+void BitMap_print(BitMap* bit_map){
+  printf("BitMap: ");
+  for (int i=0; i<bit_map->numbits; i++){
+    int byte_num = i / 8; //I take the byte cell
+    int bit_in_byte = 7 - (i % 8);  //i take the extra bits, in particular im iterating the byte from left to right: needed for a correct print
+    int bit = (bit_map->buffer[byte_num] >> bit_in_byte) & 1; 
+    printf("%d", bit);
+  }
+  printf("\n");
+}
