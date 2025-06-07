@@ -19,7 +19,17 @@ void BitMap_init(BitMap* bit_map, int num_bits, uint8_t* buffer){
 
 // sets a the bit bit_num in the bitmap
 // status= 0 or 1
-void BitMap_setBit(BitMap* bit_map, int bit_num, int status);
+void BitMap_setBit(BitMap* bit_map, int bit_num, int status){
+  // get byte
+  int byte_num=bit_num>>3;        //bit_num/8 = which byte is 
+  assert(byte_num<bit_map->buffer_size);  //check if we are inside the buffer
+  int bit_in_byte = bit_num % 8; //finding which bit is inside the byte
+  if (status) {
+    bit_map->buffer[byte_num] |= (1<<bit_in_byte);  //set bit 1 in location bit_in_byte 
+  } else {
+    bit_map->buffer[byte_num] &= ~(1<<bit_in_byte); //set bit 0 in location bit_in_byte
+  }
+}
 
 // inspects the status of the bit bit_num
 int BitMap_bit(const BitMap* bit_map, int bit_num);
