@@ -11,6 +11,8 @@ typedef struct  {
   int min_bucket_size; // the minimum page of RAM that can be returned
 } BuddyAllocator;
 
+// returns the number of indexes to initialize the bitmap's buffer
+int maxNumIndexesFromLevel(int num_levels);
 
 // initializes the buddy allocator, and checks that the buffer is large enough
 void BuddyAllocator_init(BuddyAllocator* alloc,int num_levels,char* buffer,int buffer_size,char* memory,int min_bucket_size);
