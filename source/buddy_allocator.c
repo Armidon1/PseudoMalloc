@@ -24,9 +24,6 @@ int startIndex(int index){
   return (index-(1<<levelIdx(index)));
 }
 
-// computes the size in bytes for the buffer of the allocator
-int BuddyAllocator_calcSize(int num_levels);
-
 // initializes the buddy allocator, and checks that the buffer is large enough
 void BuddyAllocator_init(BuddyAllocator* alloc,int num_levels, char* buffer, int buffer_size, char* memory, int min_bucket_size);
 
