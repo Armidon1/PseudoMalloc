@@ -76,5 +76,6 @@ int main(){
     if(testing_print()) exit(EXIT_FAILURE);
     printf("------------------------\n");
     printf("ALL TEST ARE COMPLETED!! NICE JOB SIMONE!\n");
+    printf("sizeof(bitmap)=%ld, sizeof(buddyallocator)=%ld\n", sizeof(BitMap), sizeof(BuddyAllocator));
     return 0;
 }

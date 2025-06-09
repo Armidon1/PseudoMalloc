@@ -68,8 +68,47 @@ void BuddyAllocator_init(BuddyAllocator* alloc,int num_levels, char* buffer, int
   #endif
 }
 
-// allocates memory
-void* BuddyAllocator_malloc(BuddyAllocator* alloc, int size);
+// MALLOC ZONE
+void* findMemoryPointer(void* memory, int indexBuddy, int num_levels, int min_bucket_size) {
+  //working
+}
+
+int findBuddyIndex_dfs(BitMap* bm,int index, int current_level, int target_level) {
+  if (current_level == target_level) {
+      if (BitMap_bit(bm, index) == 0) //if is free
+          return index;
+      else
+          return -1;
+  }
+
+  if (BitMap_bit(bm, index) != 0) //if is already occupied, exit
+      return -1;
+
+  int left = 2 * index + 1; //left child
+  int right = 2 * index + 2;  //right child
+
+  int res = dfs(bm,left, current_level + 1, target_level);
+  if (res != -1) return res;
+  return dfs(bm, right, current_level + 1, target_level);
+}
+
+void* getBuddy(BuddyAllocator* alloc, int target_level){
+  BitMap* bm = &(alloc->bitmap);
+  int buddyIndex= findBuddyIndex_dfs(bm, 0, 0, target_level);
+  BitMap_setBit(bm, buddyIndex, 1);
+  return findMemoryPointer(alloc->memory, buddyIndex, alloc->num_levels, alloc->min_bucket_size);
+}
+void* BuddyAllocator_malloc(BuddyAllocator* alloc, int size){
+  int mem_size=(1<<alloc->num_levels)*alloc->min_bucket_size; // we determine the level of the page
+  int level = fromIndextoLevel((size_t) mem_size/size);
+
+  // if the level is too small, we pad it to max
+  if (level>alloc->num_levels) level=alloc->num_levels;
+  printf("requested: %d bytes, level %d \n", size, level);
+
+  //find the correct index
+  return getBuddy(alloc, level);
+}
 
 // releases allocated memory
 void BuddyAllocator_free(BuddyAllocator* alloc, void* mem);
