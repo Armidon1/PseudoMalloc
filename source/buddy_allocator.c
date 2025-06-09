@@ -1,8 +1,12 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include "../headers/buddy_allocator.h"
+
+//DEBUG
+#define DEBUG 0
 
 //Aux functions
 int fromIndextoLevel(size_t index){
@@ -22,7 +26,7 @@ int parentIndex(int index){
 }
   
 int startIndex(int index){
-  return (index-(1<<levelIdx(index)));
+  return (index-(1<<fromIndextoLevel(index)));
 }
 
 int maxNumIndexesFromLevel(int num_levels){
@@ -32,20 +36,36 @@ int maxNumIndexesFromLevel(int num_levels){
 // initializes the buddy allocator, and checks that the buffer is large enough
 void BuddyAllocator_init(BuddyAllocator* alloc,int num_levels, char* buffer, int buffer_size, char* memory, int min_bucket_size){
   //checking that num_leveles is correct and buffer_size is enough
-  if(num_levels<0)perror("num_levels<0. Failed to initialize BuddyAllocator\n");
-  int num_bits=maxNumIndexesFromLevel(num_levels); //(2*numlevels)-1 are the numbers of indexes possible
-  int required_bytes_for_buffer = BitMap_getBytes(num_bits);
-  if (buffer_size < required_bytes_for_buffer){
-    fprintf(stderr, "buffer is too small to initialize BitMap: needed at least %d bytes, got %d\n", required_bytes_for_buffer, buffer_size);
+  if(num_levels<0){
+    perror("num_levels<0. Failed to initialize BuddyAllocator\n");
     exit(EXIT_FAILURE);
   }
+  #if DEBUG==1
+    printf("DEBUG:INIT Im about to get required bytes for buffer\n");
+  #endif
+  int num_bits=maxNumIndexesFromLevel(num_levels); //(2*numlevels)-1 are the numbers of indexes possible
+  int required_bytes_for_buffer = BitMap_getBytes(num_bits);
+  #if DEBUG==1
+    printf("DEBUG:INIT required bytes for buffer =%d and i have buffer_size = %d\n", required_bytes_for_buffer, buffer_size);
+  #endif
+  if (buffer_size < required_bytes_for_buffer){
+    fprintf(stderr, "ERROR: buffer is too small to initialize BitMap: needed at least %d bytes, got %d\n", required_bytes_for_buffer, buffer_size);
+    exit(EXIT_FAILURE);
+  }
+  #if DEBUG==1
+    printf("DEBUG:INIT Passed all checks\n");
+  #endif
+  
   //finally i can initialize my BuddyAllocator
   alloc->memory=memory;
   alloc->min_bucket_size=min_bucket_size;
   alloc->num_levels=num_levels;
   BitMap bm;
-  BitMap_init(&bm, num_bits, buffer);
+  BitMap_init(&bm, num_bits, (uint8_t*)buffer);
   alloc->bitmap = bm;
+  #if DEBUG==1
+    printf("DEBUG:INIT finished INIT\n");
+  #endif
 }
 
 // allocates memory
