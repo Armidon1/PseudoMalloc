@@ -1,9 +1,9 @@
 CC=gcc
-CFLAGS=-std=gnu99 -Wall -Wextra
+CFLAGS=-std=gnu99 -Wall -Wextra 
 SRC_DIR=source
 HEAD_DIR=headers
 TEST_DIR=test
-LDFLAGS=
+LDFLAGS=-lm
 
 SRCS=$(wildcard $(SRC_DIR)/*.c)
 OBJS=$(SRCS:$(SRC_DIR)/%.c=$(SRC_DIR)/%.o)
@@ -26,3 +26,8 @@ run: all
 
 clean:
 	rm -f $(SRC_DIR)/*.o $(TEST_BINS)
+
+debug: CFLAGS += -g
+debug: all
+
+#to use debug with gdb:make clean and then make debug
