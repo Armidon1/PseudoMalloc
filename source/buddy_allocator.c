@@ -30,11 +30,11 @@ int startIndex(int index){
 }
 
 int maxNumIndexesFromLevel(int num_levels){
-  return (1<<num_levels)-1;
+  return (1<<num_levels)-1; // if there are n indexes (not includes the 0) then this function retrives a valure from 0 to n-1
 }
 
 // initializes the buddy allocator, and checks that the buffer is large enough
-void BuddyAllocator_init(BuddyAllocator* alloc,int num_levels, char* buffer, int buffer_size, char* memory, int min_bucket_size){
+void BuddyAllocator_init(BuddyAllocator* alloc,int num_levels, char* buffer, int buffer_size, char* memory, int bucket_size){
   //checking that num_leveles is correct and buffer_size is enough
   if(num_levels<0){
     perror("num_levels<0. Failed to initialize BuddyAllocator\n");
@@ -69,8 +69,17 @@ void BuddyAllocator_init(BuddyAllocator* alloc,int num_levels, char* buffer, int
 }
 
 // MALLOC ZONE
-void* findMemoryPointer(void* memory, int indexBuddy, int num_levels, int min_bucket_size) {
+void* findMemoryPointer(void* memory, int indexBuddy, int target_level, int min_bucket_size) {
   //working
+  void* start_point = memory;
+  int currentIndex = indexBuddy+1;
+  int indexes_in_level_target_before = maxNumIndexesFromLevel(target_level-1) + 1;
+  int indexes_in_target_level;
+  if (!target_level)  indexes_in_target_level = 1; //case target level = 0 
+  else  indexes_in_target_level = (maxNumIndexesFromLevel(target_level)+1) - indexes_in_level_target_before; //if target level = 1 ==> indexes (2-0)-1=1, which means i have 0 and 1 indexes 
+  int indexBuddy_in_target_level = currentIndex - indexes_in_level_target_before;
+  start_point += bucket_size*(indexBuddy_in_target_level - 1);
+  return start_point;
 }
 
 int findBuddyIndex_dfs(BitMap* bm,int index, int current_level, int target_level) {
@@ -95,8 +104,10 @@ int findBuddyIndex_dfs(BitMap* bm,int index, int current_level, int target_level
 void* getBuddy(BuddyAllocator* alloc, int target_level){
   BitMap* bm = &(alloc->bitmap);
   int buddyIndex= findBuddyIndex_dfs(bm, 0, 0, target_level);
+  if (!buddyIndex) return -1; //if everything in target_level is occupied, then exit 
   BitMap_setBit(bm, buddyIndex, 1);
-  return findMemoryPointer(alloc->memory, buddyIndex, alloc->num_levels, alloc->min_bucket_size);
+  int bucket_size = ((alloc->min_bucket_size)<<(alloc->num_levels))>>target_level;
+  return findMemoryPointer(alloc->memory, buddyIndex, target_level, bucket_size);
 }
 void* BuddyAllocator_malloc(BuddyAllocator* alloc, int size){
   int mem_size=(1<<alloc->num_levels)*alloc->min_bucket_size; // we determine the level of the page
@@ -107,7 +118,12 @@ void* BuddyAllocator_malloc(BuddyAllocator* alloc, int size){
   printf("requested: %d bytes, level %d \n", size, level);
 
   //find the correct index
-  return getBuddy(alloc, level);
+  void* pointer = getBuddy(alloc, level);
+  if (!pointer){
+    perror("MALLOC: Not enough memory!\n");
+    exit(EXIT_FAILURE);
+  }
+  return pointer;
 }
 
 // releases allocated memory
