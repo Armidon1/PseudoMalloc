@@ -3,10 +3,14 @@
 
 #include "../headers/buddy_allocator.h"
 
-//DEBUG
-#define SHOW_DEBUG_VALUES 0 //must be 0 or 1
-#define DEBUG_CHECK_INIT_BUFFER_BITMAP 0  //must be 0 or 1
-#define DEBUG_CHECK_INIT_NEGATIVE_LEVELS 0 //must be o or 1
+//DEBUG INIT
+#define SHOW_DEBUG_VALUES 0                 //must be 0 or 1
+#define DEBUG_CHECK_INIT_BUFFER_BITMAP 0    //must be 0 or 1
+#define DEBUG_CHECK_INIT_NEGATIVE_LEVELS 0  //must be o or 1
+
+//DEBUG MALLOC
+#define DEBUG_CHECK_MALLOC 2                //must be 0,1 or 2
+#define DEBUG_CHECK_MALLOC_ALL 0            //must be 0 or 1
 
 
 #define BUDDY_LEVELS 9
@@ -45,6 +49,49 @@ int testing_init(){
 
 //NEEDED
 int testing_malloc(){
+    printf("|STARTING TESTING MALLOC|\n");
+    BuddyAllocator allocator;
+    int buffer_size = BitMap_getBytes(maxNumIndexesFromLevel(BUDDY_LEVELS));
+    char buffer_bitmap[buffer_size];
+    char memory[MEMORY_SIZE];
+    BuddyAllocator_init(&allocator, BUDDY_LEVELS, buffer_bitmap, buffer_size, memory, MIN_BUCKET_SIZE);
+
+    #if DEBUG_CHECK_MALLOC == 0 || DEBUG_CHECK_MALLOC_ALL==1
+        // 1. Testing 0 byte allocation
+        void* p0 = BuddyAllocator_malloc(&allocator, 0);
+        if (p0) printf("ERROR: Allocation of 0 bytes should not work! Something must be fixed\n");
+        else printf("OK: Allocation of 0 bytes correctly handled.\n");
+    #endif
+
+    #if DEBUG_CHECK_MALLOC == 1 || DEBUG_CHECK_MALLOC_ALL==1
+        // 2. Testing too big allocations
+        void* p1 = BuddyAllocator_malloc(&allocator, MEMORY_SIZE + 1);
+        if (p1) printf("ERROR: too big allocations should not work! Something must be fixed\n");
+        else printf("OK: too big allocations correctly handled.\n");
+    #endif
+
+    #if DEBUG_CHECK_MALLOC == 2 || DEBUG_CHECK_MALLOC_ALL==1
+        // 3. Testing Allocations that fills all memory
+        printf("memory=%p\n", memory);
+        int total_blocks = 1 << BUDDY_LEVELS;
+        void* blocks[total_blocks];
+        int i;
+        for (i = 0; i < total_blocks; ++i) {
+            printf("TEST: i=%d\n", i);
+            void* p = BuddyAllocator_malloc(&allocator, MIN_BUCKET_SIZE);
+            printf("TEST: pointer=%p\n", p);
+            blocks[i] = p;
+            if (!blocks[i]) break;
+        }
+        if (i == total_blocks) printf("OK: memory filled correctly.\n");
+        else printf("ERROR: i failed filling all the memory.\n");
+
+        void* p2 = BuddyAllocator_malloc(&allocator, MIN_BUCKET_SIZE);
+        if (p2) printf("ERROR: allocation beyond memory should fail!\n");
+        else printf("OK: allocation beyond properly managed memory.\n");
+    #endif
+
+    printf("|FINISHING TESTING MALLOC|\n");
     return 0;
 }
 //NEEDED
@@ -76,6 +123,5 @@ int main(){
     if(testing_print()) exit(EXIT_FAILURE);
     printf("------------------------\n");
     printf("ALL TEST ARE COMPLETED!! NICE JOB SIMONE!\n");
-    printf("sizeof(bitmap)=%ld, sizeof(buddyallocator)=%ld\n", sizeof(BitMap), sizeof(BuddyAllocator));
     return 0;
 }
