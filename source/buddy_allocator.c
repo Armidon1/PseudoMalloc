@@ -95,28 +95,19 @@ void* findMemoryPointer(void* memory, int indexBuddy, int target_level, int buck
   return (uint8_t*)memory + bucket_size * indexBuddy_in_target_level;
 }
 
-int findBuddyIndex_dfs(BitMap* bm,int index, int current_level, int target_level) {
-  if (current_level == target_level) {
-      if (BitMap_bit(bm, index) == 0){ //if is free
-          if (current_level == target_level && BitMap_bit(bm, index) == 0) {
-              printf("DEBUG: allocando index=%d a livello=%d\n", index, target_level);
-          }
-          return index;
-      }
-        
-      else
-          return -1;
+//i scan all the bitmap everytime. I don't like it but i guess is the only way :(. Everytime i find a node which isn't free, then continue searching 
+int findBuddyIndex_dfs(BitMap* bm,int index, int current_level, int target_level) { 
+  if (current_level == target_level){
+    if (BitMap_bit(bm, index)) return -1; //seems like that this node is occupied
+    return index; //so is free, i'm taking that node
   }
-
-  if (BitMap_bit(bm, index) != 0) //if is already occupied, exit
-      return -1;
-
-  int left = 2 * index + 1; //left child
-  int right = 2 * index + 2;  //right child
-
-  int res = findBuddyIndex_dfs(bm,left, current_level + 1, target_level);
-  if (res != -1) return res;
-  return findBuddyIndex_dfs(bm, right, current_level + 1, target_level);
+  //if i'm here, it means that i'm not in the target level
+  int left_child = (2*index)+1;
+  int right_child = (2 * index)+2;
+  int ret= findBuddyIndex_dfs(bm, left_child, current_level+1, target_level); 
+  if (ret!=-1) return ret; //seems like i found something
+  ret= findBuddyIndex_dfs(bm, right_child, current_level+1, target_level);
+  return ret;
 }
 
 void* getBuddy(BuddyAllocator* alloc, int target_level){
