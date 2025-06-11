@@ -45,6 +45,37 @@ int fromSizeToLevel(int size, BuddyAllocator* alloc){
   }
   return level;
 }
+
+//AUX stuff for side effect on bitmap, all implemented recursivelly
+//for Malloc
+void setOccupiedAllAncestors(BitMap* bm, int index){
+  if (!index) //i'm in the root
+    BitMap_setBit(bm, index, 1);
+  setOccupiedAllAncestors(bm, parentIndex(index));
+}
+void setOccupiedAllDescendants(BitMap* bm, int index, int indexLevel){
+  BitMap_setBit(bm, index, 1);
+  if(indexLevel<MAX_LEVELS){
+    int left_child = (2*index)+1;
+    int right_child = (2 * index)+2;
+    setOccupiedAllDescendants(bm, left_child, indexLevel+1);
+    setOccupiedAllDescendants(bm, right_child, indexLevel+1);
+  }
+}
+void Malloc_doAllTaskOnBitmap(BitMap* bm, int index, int current_level){
+  BitMap_setBit(bm, index, 1);
+  setOccupiedAllAncestors(bm, parentIndex(index));
+  int left_child = (2*index)+1;
+  int right_child = (2 * index)+2;
+  setOccupiedAllDescendants(bm, left_child, current_level+1);  
+  setOccupiedAllDescendants(bm, right_child, current_level+1);
+}
+
+//for Free (WORKING IN PROGRESS)
+void setFreeAllAncestors(BitMap* bm, int index);
+void setFreeAllDescendants(BitMap* bm, int index, int indexLevel, int max_level);
+void Free_doAllTaskOnBitmap(BitMap* bm, int index);
+
 // initializes the buddy allocator, and checks that the buffer is large enough
 void BuddyAllocator_init(BuddyAllocator* alloc,int num_levels, char* buffer, int buffer_size, char* memory, int min_bucket_size){
   //checking that num_leveles is correct and buffer_size is enough
@@ -112,11 +143,11 @@ int findBuddyIndex_dfs(BitMap* bm,int index, int current_level, int target_level
 
 void* getBuddy(BuddyAllocator* alloc, int target_level){
   BitMap* bm = &(alloc->bitmap);
-  int buddyIndex= findBuddyIndex_dfs(bm, 0, 0, target_level);
-  if (buddyIndex == -1) return NULL; //if everything in target_level is occupied, then exit 
-  BitMap_setBit(bm, buddyIndex, 1);
+  int index= findBuddyIndex_dfs(bm, 0, 0, target_level);
+  if (index == -1) return NULL; //if everything in target_level is occupied, then exit 
+  Malloc_doAllTaskOnBitmap(bm, index, fromIndextoLevel(index));
   int bucket_size = ((alloc->min_bucket_size)<<(alloc->num_levels))>>target_level;
-  return findMemoryPointer(alloc->memory, buddyIndex, target_level, bucket_size);
+  return findMemoryPointer(alloc->memory, index, target_level, bucket_size);
 }
 void* BuddyAllocator_malloc(BuddyAllocator* alloc, int size){
   if (!size){
