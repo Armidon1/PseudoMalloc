@@ -40,13 +40,33 @@ int BitMap_bit(const BitMap* bit_map, int bit_num){
 }
 
 // print the entire bitmap
+// void BitMap_print(BitMap* bit_map){
+//   printf("BitMap: ");
+//   for (int i=0; i<bit_map->num_bits; i++){
+//     int byte_num = i / 8; //I take the byte cell
+//     int bit_in_byte = 7 - (i % 8);  //i take the extra bits, in particular im iterating the byte from left to right: needed for a correct print
+//     int bit = (bit_map->buffer[byte_num] >> bit_in_byte) & 1; 
+//     printf("%d", bit);
+//   }
+//   printf("\n");
+//}
 void BitMap_print(BitMap* bit_map){
-  printf("BitMap: ");
-  for (int i=0; i<bit_map->num_bits; i++){
-    int byte_num = i / 8; //I take the byte cell
-    int bit_in_byte = 7 - (i % 8);  //i take the extra bits, in particular im iterating the byte from left to right: needed for a correct print
-    int bit = (bit_map->buffer[byte_num] >> bit_in_byte) & 1; 
+  printf("BitMap:\n");
+  int level = 0;
+  int nodes_in_level = 1;
+  int printed = 0;
+  for (int i = 0; i < bit_map->num_bits; i++) {
+    int byte_num = i / 8;
+    int bit_in_byte = 7 - (i % 8);
+    int bit = (bit_map->buffer[byte_num] >> bit_in_byte) & 1;
     printf("%d", bit);
+    printed++;
+    if (printed == nodes_in_level) {
+      printf("\n");
+      level++;
+      nodes_in_level <<= 1; // nodes_in_level *= 2
+      printed = 0;
+    }
   }
-  printf("\n");
+  if (printed != 0) printf("\n");
 }
