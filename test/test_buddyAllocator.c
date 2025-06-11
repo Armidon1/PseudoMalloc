@@ -9,7 +9,7 @@
 #define DEBUG_CHECK_INIT_NEGATIVE_LEVELS 0  //must be o or 1
 
 //DEBUG MALLOC
-#define DEBUG_CHECK_MALLOC 3                //must be 0,1 or 2
+#define DEBUG_CHECK_MALLOC 0               //must be 0,1,2,3 or 4
 #define DEBUG_CHECK_MALLOC_ALL 0            //must be 0 or 1
 
 
@@ -92,16 +92,29 @@ int testing_malloc(){
     #endif
 
     #if DEBUG_CHECK_MALLOC == 3 || DEBUG_CHECK_MALLOC_ALL==1
-        printf("TEST: allocazioni con size diverse\n");
+        printf("TEST: allocation with different sizes\n");
         int sizes[] = { 1, 100, 512, 2048, 4096, 10000, 50000, 100000, 200000, 400000, 800000 };
         int num_sizes = sizeof(sizes) / sizeof(sizes[0]);
         void* ptrs[num_sizes];
         for (int i = 0; i < num_sizes; ++i) {
             ptrs[i] = BuddyAllocator_malloc(&allocator, sizes[i]);
             if (ptrs[i])
-                printf("OK: Allocazione di %d bytes riuscita, ptr=%p\n", sizes[i], ptrs[i]);
+                printf("OK: Allocation of %d bytes Success, ptr=%p\n", sizes[i], ptrs[i]);
             else
-                printf("ERROR: Allocazione di %d bytes fallita\n", sizes[i]);
+                printf("ERROR: Allocation of %d bytes FAILED :(\n", sizes[i]);
+        }
+    #endif
+    #if DEBUG_CHECK_MALLOC == 4 || DEBUG_CHECK_MALLOC_ALL==1
+        printf("TEST: less different sizes allocations\n");
+        int sizes[] = {400000, 800000 };
+        int num_sizes = sizeof(sizes) / sizeof(sizes[0]);
+        void* ptrs[num_sizes];
+        for (int i = 0; i < num_sizes; ++i) {
+            ptrs[i] = BuddyAllocator_malloc(&allocator, sizes[i]);
+            if (ptrs[i])
+                printf("OK: Allocation of %d bytes Success, ptr=%p\n", sizes[i], ptrs[i]);
+            else
+                printf("ERROR: Allocation of %d bytes FAILED :(\n", sizes[i]);
         }
     #endif
 
