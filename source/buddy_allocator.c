@@ -49,8 +49,10 @@ int fromSizeToLevel(int size, BuddyAllocator* alloc){
 //AUX stuff for side effect on bitmap, all implemented recursivelly
 //for Malloc
 void setOccupiedAllAncestors(BitMap* bm, int index){
-  if (!index) //i'm in the root
+  if (!index){ //i'm in the root
     BitMap_setBit(bm, index, 1);
+    return;
+  } 
   setOccupiedAllAncestors(bm, parentIndex(index));
 }
 void setOccupiedAllDescendants(BitMap* bm, int index, int indexLevel){
