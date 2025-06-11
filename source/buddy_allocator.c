@@ -34,6 +34,17 @@ int maxNumIndexesFromLevel(int num_levels){
   return (1 << (num_levels + 1)) - 1; // if there are n indexes (not includes the 0) then this function retrives a valure from 0 to n-1
 }
 
+int fromSizeToLevel(int size, BuddyAllocator* alloc){
+  int level = MAX_LEVELS;
+  int mem_size=(1<<alloc->num_levels)*alloc->min_bucket_size;
+  assert((mem_size & (mem_size - 1)) == 0); //memsize has to be a power of 2
+  while (level>0){
+    int bucket_size=(mem_size>>level);
+    if (size<=bucket_size) break;
+    level-=1;
+  }
+  return level;
+}
 // initializes the buddy allocator, and checks that the buffer is large enough
 void BuddyAllocator_init(BuddyAllocator* alloc,int num_levels, char* buffer, int buffer_size, char* memory, int min_bucket_size){
   //checking that num_leveles is correct and buffer_size is enough
@@ -122,7 +133,11 @@ void* BuddyAllocator_malloc(BuddyAllocator* alloc, int size){
     return NULL;
   }
   int mem_size=(1<<alloc->num_levels)*alloc->min_bucket_size; // we determine the level of the page
-  int level = fromIndextoLevel((size_t) mem_size/size);
+  if (size>mem_size){
+    printf("MALLOC: WARNING: too big allocation: requested:%d and the allocator have %d. You will recieve a NULL pointer!\n",size, mem_size);
+    return NULL;
+  }
+  int level = fromSizeToLevel(size, alloc);
   printf("DEBUG: MALLOC richiesta size=%d, livello=%d\n", size, level);
 
   // if the level is too small, we pad it to max

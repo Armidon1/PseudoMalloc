@@ -9,7 +9,7 @@
 #define DEBUG_CHECK_INIT_NEGATIVE_LEVELS 0  //must be o or 1
 
 //DEBUG MALLOC
-#define DEBUG_CHECK_MALLOC 2                //must be 0,1 or 2
+#define DEBUG_CHECK_MALLOC 3                //must be 0,1 or 2
 #define DEBUG_CHECK_MALLOC_ALL 0            //must be 0 or 1
 
 
@@ -89,6 +89,20 @@ int testing_malloc(){
         void* p2 = BuddyAllocator_malloc(&allocator, MIN_BUCKET_SIZE);
         if (p2) printf("ERROR: allocation beyond memory should fail!\n");
         else printf("OK: allocation beyond properly managed memory.\n");
+    #endif
+
+    #if DEBUG_CHECK_MALLOC == 3 || DEBUG_CHECK_MALLOC_ALL==1
+        printf("TEST: allocazioni con size diverse\n");
+        int sizes[] = { 1, 100, 512, 2048, 4096, 10000, 50000, 100000, 200000, 400000, 800000 };
+        int num_sizes = sizeof(sizes) / sizeof(sizes[0]);
+        void* ptrs[num_sizes];
+        for (int i = 0; i < num_sizes; ++i) {
+            ptrs[i] = BuddyAllocator_malloc(&allocator, sizes[i]);
+            if (ptrs[i])
+                printf("OK: Allocazione di %d bytes riuscita, ptr=%p\n", sizes[i], ptrs[i]);
+            else
+                printf("ERROR: Allocazione di %d bytes fallita\n", sizes[i]);
+        }
     #endif
 
     printf("|FINISHING TESTING MALLOC|\n");
