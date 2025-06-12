@@ -32,7 +32,7 @@ int buddyIndex(int index){
 }
   
 int parentIndex(int index){
-  return index/2;
+  return (index-1)/2;
 }
   
 int startIndex(int index){
@@ -179,6 +179,7 @@ void* getBuddy(BuddyAllocator* alloc, int target_level){
   #endif
   return findMemoryPointer(alloc->memory, index, target_level, bucket_size);
 }
+
 void* BuddyAllocator_malloc(BuddyAllocator* alloc, int size){
   if (!size){
     printf("MALLOC: WARNING: you are trying to allocate 0 bytes. You will recieve a NULL pointer!\n");
@@ -196,7 +197,7 @@ void* BuddyAllocator_malloc(BuddyAllocator* alloc, int size){
   #endif
 
   // if the level is too small, we pad it to max
-  if (level>alloc->num_levels) level=alloc->num_levels;
+  if (level>alloc->num_levels) level=alloc->num_levels; //useless check, implemented fromSizeToLevel which already pad it to max
   printf("requested: %d bytes, level %d \n", size, level);
 
   //find the correct index
