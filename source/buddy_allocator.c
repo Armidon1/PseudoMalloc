@@ -61,50 +61,6 @@ int fromSizeToLevel(int size, BuddyAllocator* alloc){
   return level;
 }
 
-//AUX stuff for side effect on bitmap, all implemented recursivelly
-//for Malloc
-void setOccupiedAllAncestors(BitMap* bm, int index){
-  if (index < 0) return; //to be safe
-  #if DEBUG==1
-  printf("DEBUG: MALLOC_setOccupiedAllAncestors: index=%d\n",index);
-  #endif
-  BitMap_setBit(bm, index, 1);
-  if (index == 0) return; //if im in root
-  setOccupiedAllAncestors(bm, parentIndex(index));
-}
-void setOccupiedAllDescendants(BitMap* bm, int index, int index_level, int max_level){
-  #if DEBUG==1
-    printf("DEBUG: MALLOC_setOccupiedAllDescendants: index=%d, index_level:%d, max_level=%d\n",index, index_level, max_level);
-  #endif
-  int max_index = bm->num_bits - 1; //to 
-  if (index > max_index) return;    //be
-  if(index_level>max_level) return; //safe
-  BitMap_setBit(bm, index, 1);
-  if(index_level!=max_level){
-    int left_child = (2*index)+1;
-    int right_child = (2 * index)+2;
-    setOccupiedAllDescendants(bm, left_child, index_level+1,max_level);
-    setOccupiedAllDescendants(bm, right_child, index_level+1, max_level);
-  }
-}
-void Malloc_doAllTaskOnBitmap(BitMap* bm, int index, int current_level, int max_level){
-  BitMap_setBit(bm, index, 1);
-  #if DEBIG == 1
-  printf("DEBUG: MALLOC_doAllStuffOnBitmap: index=%d, current_level:%d\n",index, current_level);
-  BitMap_print(bm);
-  #endif
-  setOccupiedAllAncestors(bm, parentIndex(index));
-  int left_child = (2*index)+1;
-  int right_child = (2 * index)+2;
-  setOccupiedAllDescendants(bm, left_child, current_level+1, max_level);  
-  setOccupiedAllDescendants(bm, right_child, current_level+1, max_level);
-}
-
-//for Free (WORKING IN PROGRESS)
-void setFreeAllAncestors(BitMap* bm, int index);
-void setFreeAllDescendants(BitMap* bm, int index, int indexLevel, int max_level);
-void Free_doAllTaskOnBitmap(BitMap* bm, int index);
-
 // initializes the buddy allocator, and checks that the buffer is large enough
 void BuddyAllocator_init(BuddyAllocator* alloc,int num_levels, char* buffer, int buffer_size, char* memory, int min_bucket_size){
   //checking that num_leveles is correct and buffer_size is enough
@@ -160,6 +116,43 @@ void* findMemoryPointer(void* memory, int indexBuddy, int target_level, int buck
 }
 
 //i scan all the bitmap everytime. I don't like it but i guess is the only way :(. Everytime i find a node which isn't free, then continue searching 
+void setOccupiedAllAncestors(BitMap* bm, int index){
+  if (index < 0) return; //to be safe
+  #if DEBUG==1
+  printf("DEBUG: MALLOC_setOccupiedAllAncestors: index=%d\n",index);
+  #endif
+  BitMap_setBit(bm, index, 1);
+  if (index == 0) return; //if im in root
+  setOccupiedAllAncestors(bm, parentIndex(index));
+}
+void setOccupiedAllDescendants(BitMap* bm, int index, int index_level, int max_level){
+  #if DEBUG==1
+    printf("DEBUG: MALLOC_setOccupiedAllDescendants: index=%d, index_level:%d, max_level=%d\n",index, index_level, max_level);
+  #endif
+  int max_index = bm->num_bits - 1; //to 
+  if (index > max_index) return;    //be
+  if(index_level>max_level) return; //safe
+  BitMap_setBit(bm, index, 1);
+  if(index_level!=max_level){
+    int left_child = (2*index)+1;
+    int right_child = (2 * index)+2;
+    setOccupiedAllDescendants(bm, left_child, index_level+1,max_level);
+    setOccupiedAllDescendants(bm, right_child, index_level+1, max_level);
+  }
+}
+void Malloc_doAllTaskOnBitmap(BitMap* bm, int index, int current_level, int max_level){
+  BitMap_setBit(bm, index, 1);
+  #if DEBUG == 1
+  printf("DEBUG: MALLOC_doAllStuffOnBitmap: index=%d, current_level:%d\n",index, current_level);
+  BitMap_print(bm);
+  #endif
+  setOccupiedAllAncestors(bm, parentIndex(index));
+  int left_child = (2*index)+1;
+  int right_child = (2 * index)+2;
+  setOccupiedAllDescendants(bm, left_child, current_level+1, max_level);  
+  setOccupiedAllDescendants(bm, right_child, current_level+1, max_level);
+}
+
 int findBuddyIndex_dfs(BitMap* bm,int index, int current_level, int target_level) { 
   if (current_level == target_level){
     if (BitMap_bit(bm, index)) return -1; //seems like that this node is occupied
@@ -218,7 +211,51 @@ void* BuddyAllocator_malloc(BuddyAllocator* alloc, int sizeRequested){
   return (void*)(pointer+sizeof(int)); //i give him sizeRequested bytes, as he asked
 }
 
-// releases allocated memory (WORK IN PROGRESS)
+// releases allocated memory 
+void setFreeAllAncestors(BitMap* bm, int index){
+  if (index < 0) return; //to be safe
+  #if DEBUG==1
+  printf("DEBUG: FREE_setFreeAllAncestors: index=%d\n",index);
+  #endif
+  BitMap_setBit(bm, index, 0);
+  if (!index) return; //if im root, i dont have a brother
+  if (!BitMap_bit(buddyIndex(index))){ //i check if my brother is free
+    setFreeAllAncestors(bm, parentIndex(index));
+  }
+}
+void setFreeAllDescendants(BitMap* bm, int index, int indexLevel, int max_level){
+  #if DEBUG==1
+    printf("DEBUG: FREE_setFreeAllDescendants: index=%d, index_level:%d, max_level=%d\n",index, index_level, max_level);
+  #endif
+  int max_index = bm->num_bits - 1; //to 
+  if (index > max_index) return;    //be
+  if(index_level>max_level) return; //safe
+  BitMap_setBit(bm, index, 0);
+  if(index_level!=max_level){
+    int left_child = (2*index)+1;
+    int right_child = (2 * index)+2;
+    setFreeAllDescendants(bm, left_child, current_level+1, max_level);  
+    setFreeAllDescendants(bm, right_child, current_level+1, max_level);
+  }
+}
+int Free_doAllTaskOnBitmap(BitMap* bm, int index){
+  if (!BitMap_bit(bm, index)){
+    printf("ERROR: FREE: Bit index=%d already free. Double free error! Nothing will happen\n");
+    return -1;
+  }
+  BitMap_setBit(bm, index, 0); 
+  #if DEBUG == 1
+  printf("DEBUG: FREE_doAllTaskOnBitmap: index=%d, current_level:%d\n",index, current_level);
+  BitMap_print(bm);
+  #endif
+  setFreeAllAncestors(bm, parentIndex(index));
+  int left_child = (2*index)+1;
+  int right_child = (2*index)+2;
+  setFreeAllDescendants(bm, left_child, current_level+1, max_level);  
+  setFreeAllDescendants(bm, right_child, current_level+1, max_level);
+  return 0;
+}
+
 int checkIfMemoryIsInsideAlloc(BuddyAllocator* alloc, void* mem){
   int sizeOfMemory = (alloc->min_bucket_size)<<(alloc->num_levels); //in bytes
   int* startAllocMemory =(int*)(alloc->memory);
@@ -232,10 +269,10 @@ int BuddyAllocator_free(BuddyAllocator* alloc, void* memReleased){
   int* mem = (int*)memReleased -sizeof(int); //real memory
   if (!checkIfMemoryIsInsideAlloc(alloc, (void*)mem)){
     printf("ERROR: FREE: You are trying to free a pointer which isn't inside the allocator's buffer! Nothing will happen\n");
-    return 0; //which will be used to the user to check directly if free function worked
+    return -1; //which will be used to the user to check directly if free function worked
   }
-  Free_doAllTaskOnBitmap(&alloc->bitmap, index);
-  return 1; //everything went good
+  if (Free_doAllTaskOnBitmap(&alloc->bitmap, index)==-1) return -1; //double free error
+  return 0; //everything went good
 }
 
 //for security reasons, frees the memory and also set all bits to 0
@@ -247,7 +284,6 @@ int BuddyAllocator_HardFree(BuddyAllocator* alloc, void* memReleased){
   memset(mem, 0, bucket_size); 
   return 1; //everything went good
 }
-
 
 //print the buddyallocator (WORK IN PROGRESS)
 void BuddyAllocator_print(BuddyAllocator* alloc);
