@@ -9,7 +9,7 @@
 #define DEBUG_CHECK_INIT_NEGATIVE_LEVELS 0  //must be o or 1
 
 //DEBUG MALLOC
-#define DEBUG_CHECK_MALLOC 0               //must be 0,1,2,3 or 4
+#define DEBUG_CHECK_MALLOC 3               //must be 0,1,2,3 or 4
 #define DEBUG_CHECK_MALLOC_ALL 0            //must be 0 or 1
 
 
@@ -89,11 +89,12 @@ int testing_malloc(){
         void* p2 = BuddyAllocator_malloc(&allocator, MIN_BUCKET_SIZE);
         if (p2) printf("ERROR: allocation beyond memory should fail!\n");
         else printf("OK: allocation beyond properly managed memory.\n");
+        //BitMap_print(&allocator.bitmap);
     #endif
 
     #if DEBUG_CHECK_MALLOC == 3 || DEBUG_CHECK_MALLOC_ALL==1
         printf("TEST: allocation with different sizes\n");
-        int sizes[] = { 1, 100, 512, 2048, 4096, 10000, 50000, 100000, 200000, 400000, 800000 };
+        int sizes[] = { 1, 100, 512, 2048, 4096, 10000, 50000, 100000, 200000, 400000, 800000};
         int num_sizes = sizeof(sizes) / sizeof(sizes[0]);
         void* ptrs[num_sizes];
         for (int i = 0; i < num_sizes; ++i) {
@@ -103,6 +104,7 @@ int testing_malloc(){
             else
                 printf("ERROR: Allocation of %d bytes FAILED :(\n", sizes[i]);
         }
+        BitMap_print(&allocator.bitmap);
     #endif
     #if DEBUG_CHECK_MALLOC == 4 || DEBUG_CHECK_MALLOC_ALL==1
         printf("TEST: less different sizes allocations\n");
@@ -123,6 +125,66 @@ int testing_malloc(){
 }
 //NEEDED
 int testing_free(){
+    printf("|STARTING TESTING FREE|\n");
+    BuddyAllocator allocator;
+    int buffer_size = BitMap_getBytes(maxNumIndexesFromLevel(BUDDY_LEVELS));
+    char buffer_bitmap[buffer_size];
+    char memory[MEMORY_SIZE];
+    BuddyAllocator_init(&allocator, BUDDY_LEVELS, buffer_bitmap, buffer_size, memory, MIN_BUCKET_SIZE);
+
+    // Alloca un blocco minimo
+    void* p1 = BuddyAllocator_malloc(&allocator, MIN_BUCKET_SIZE);
+    if (!p1) {
+        printf("ERROR: Allocazione blocco minimo fallita!\n");
+        return 1;
+    }
+    printf("OK: Allocazione blocco minimo riuscita, ptr=%p\n", p1);
+
+    // Libera il blocco
+    BuddyAllocator_free(&allocator, p1);
+    printf("OK: Blocco minimo liberato.\n");
+
+    // Prova a riallocare: dovrebbe riuscire e restituire lo stesso puntatore
+    void* p2 = BuddyAllocator_malloc(&allocator, MIN_BUCKET_SIZE);
+    if (p2 == p1)
+        printf("OK: Riallocazione dopo free restituisce lo stesso blocco.\n");
+    else if (p2)
+        printf("OK: Riallocazione dopo free riuscita, ma puntatore diverso (va comunque bene).\n");
+    else
+        printf("ERROR: Riallocazione dopo free fallita!\n");
+    BuddyAllocator_free(&allocator, p1);
+
+    // Testa la liberazione di più blocchi
+    int total_blocks = 4;
+    void* blocks[total_blocks];
+    for (int i = 0; i < total_blocks; ++i) {
+        blocks[i] = BuddyAllocator_malloc(&allocator, MIN_BUCKET_SIZE);
+        if (!blocks[i]) {
+            printf("ERROR: Allocazione multipla fallita al blocco %d!\n", i);
+            return 1;
+        }
+        BitMap_print(&(allocator.bitmap));
+    }
+    BitMap_print(&(allocator.bitmap));
+    for (int i = 0; i < total_blocks; ++i) {
+        if (BuddyAllocator_free(&allocator, blocks[i])==-1) {
+            printf("Something went wrong with the free\n");
+            return 1;
+        };
+        BitMap_print(&(allocator.bitmap));
+    }
+    
+    printf("OK: Liberazione multipla riuscita.\n");
+
+    // TEST DOUBLE FREE
+    printf("TEST: double free sul primo blocco...\n");
+    int res = BuddyAllocator_free(&allocator, blocks[0]);
+    if (res == -1)
+        printf("OK: Double free correttamente rilevato e gestito.\n");
+    else
+        printf("ERROR: Double free NON rilevato!\n");
+
+    printf("|FINISHING TESTING FREE|\n");
     return 0;
 }
 //NEEDED
