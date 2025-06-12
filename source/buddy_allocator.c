@@ -10,33 +10,39 @@
 
 //Aux functions
 int fromIndextoLevel(size_t index){
-  // if (index == 0) return 0;
-  // int level = (int)floor(log2(index));
-  // return level;
-  int level = 0;
-  int nodes = 1;
-  int i = 0;
-  while (i + nodes <= (int)index) {
-      i += nodes;
-      nodes <<= 1;
-      level++;
-  }
+  if (index == 0) return 0;
+  int level = (int)floor(log2(index+1));
   return level;
+  // int level = 0;
+  // int nodes = 1;
+  // int i = 0;
+  // while (i + nodes <= (int)index) {
+  //     i += nodes;
+  //     nodes <<= 1;
+  //     level++;
+  // }
+  // return level;
 };
   
 int buddyIndex(int index){
-  if (index&0x1){ //if it's even then return the index before
-    return index-1;
+  if (index == 0) return 0; //if im the root, i'm alone
+  if (index&0x1){ //if it is't even then return the index before
+    return index+1;
   }
-  return index+1;
+  return index-1;
 }
   
 int parentIndex(int index){
   return (index-1)/2;
 }
+
+int firstIdx(int level){
+  return (1 << level)-1; 
+}
   
 int startIndex(int index){
-  return (index-(1<<fromIndextoLevel(index)));
+  //return (index-(1<<fromIndextoLevel(index)));
+  return (index-firstIdx(fromIndextoLevel(index)));
 }
 
 int maxNumIndexesFromLevel(int num_levels){
