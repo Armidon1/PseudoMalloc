@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 
 #include "../headers/buddy_allocator.h"
 
@@ -178,7 +179,7 @@ void* getBuddy(BuddyAllocator* alloc, int target_level){
   #endif
   int* pointer = (int*)findMemoryPointer(alloc->memory, index, target_level, bucket_size);
   *pointer = index; //i store in pointer[0] his bitamp's index 
-  printf("pointer[0]=%d should be equals to index=%d, also pointer[1]=%d should be a strange number\n", pointer[0], index, pointer[1]);
+  printf("DEBUG: MALLOC_GetBuddy: pointer[0]=%d should be equals to index=%d, also pointer[1]=%d should be a strange number\n", pointer[0], index, pointer[1]);
   return (void*)pointer;
 }
 
@@ -219,11 +220,11 @@ void setFreeAllAncestors(BitMap* bm, int index){
   #endif
   BitMap_setBit(bm, index, 0);
   if (!index) return; //if im root, i dont have a brother
-  if (!BitMap_bit(buddyIndex(index))){ //i check if my brother is free
+  if (!BitMap_bit(bm,buddyIndex(index))){ //i check if my brother is free
     setFreeAllAncestors(bm, parentIndex(index));
   }
 }
-void setFreeAllDescendants(BitMap* bm, int index, int indexLevel, int max_level){
+void setFreeAllDescendants(BitMap* bm, int index, int index_level, int max_level){
   #if DEBUG==1
     printf("DEBUG: FREE_setFreeAllDescendants: index=%d, index_level:%d, max_level=%d\n",index, index_level, max_level);
   #endif
@@ -233,14 +234,14 @@ void setFreeAllDescendants(BitMap* bm, int index, int indexLevel, int max_level)
   BitMap_setBit(bm, index, 0);
   if(index_level!=max_level){
     int left_child = (2*index)+1;
-    int right_child = (2 * index)+2;
-    setFreeAllDescendants(bm, left_child, current_level+1, max_level);  
-    setFreeAllDescendants(bm, right_child, current_level+1, max_level);
+    int right_child = (2*index)+2;
+    setFreeAllDescendants(bm, left_child, index_level+1, max_level);  
+    setFreeAllDescendants(bm, right_child, index_level+1, max_level);
   }
 }
-int Free_doAllTaskOnBitmap(BitMap* bm, int index){
+int Free_doAllTaskOnBitmap(BitMap* bm, int index, int max_level){
   if (!BitMap_bit(bm, index)){
-    printf("ERROR: FREE: Bit index=%d already free. Double free error! Nothing will happen\n");
+    printf("ERROR: FREE: Bit index=%d already free. Double free error! Nothing will happen\n", index);
     return -1;
   }
   BitMap_setBit(bm, index, 0); 
@@ -248,11 +249,14 @@ int Free_doAllTaskOnBitmap(BitMap* bm, int index){
   printf("DEBUG: FREE_doAllTaskOnBitmap: index=%d, current_level:%d\n",index, current_level);
   BitMap_print(bm);
   #endif
-  setFreeAllAncestors(bm, parentIndex(index));
+  if (!BitMap_bit(bm,buddyIndex(index))){ //i check if my brother is free
+    setFreeAllAncestors(bm, parentIndex(index));
+  }
+  int index_level = fromIndextoLevel(index);
   int left_child = (2*index)+1;
   int right_child = (2*index)+2;
-  setFreeAllDescendants(bm, left_child, current_level+1, max_level);  
-  setFreeAllDescendants(bm, right_child, current_level+1, max_level);
+  setFreeAllDescendants(bm, left_child, index_level+1, max_level);  
+  setFreeAllDescendants(bm, right_child, index_level+1, max_level);
   return 0;
 }
 
@@ -271,13 +275,16 @@ int BuddyAllocator_free(BuddyAllocator* alloc, void* memReleased){
     printf("ERROR: FREE: You are trying to free a pointer which isn't inside the allocator's buffer! Nothing will happen\n");
     return -1; //which will be used to the user to check directly if free function worked
   }
-  if (Free_doAllTaskOnBitmap(&alloc->bitmap, index)==-1) return -1; //double free error
+  int index =mem[0];
+  printf("DEBUG: BuddyAllocator_free: trying to free index=%d\n", index);
+  if (Free_doAllTaskOnBitmap(&alloc->bitmap, index, alloc->num_levels)==-1) return -1; //double free error
   return 0; //everything went good
 }
 
 //for security reasons, frees the memory and also set all bits to 0
 int BuddyAllocator_HardFree(BuddyAllocator* alloc, void* memReleased){
   if (!BuddyAllocator_free(alloc, memReleased)) return 0;
+  int* mem = (int*)memReleased; 
   int index = *mem;
   int level = fromIndextoLevel(index);
   int bucket_size = ((alloc->min_bucket_size)<<(alloc->num_levels))>>level;
