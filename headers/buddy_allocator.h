@@ -22,6 +22,7 @@ void* BuddyAllocator_malloc(BuddyAllocator* alloc, int size);
 
 // releases allocated memory
 void BuddyAllocator_free(BuddyAllocator* alloc, void* mem);
+int BuddyAllocator_HardFree(BuddyAllocator* alloc, void* memReleased); //stronger version of free
 
 //print the buddyallocator
 void BuddyAllocator_print(BuddyAllocator* alloc);

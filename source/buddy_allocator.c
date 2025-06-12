@@ -183,10 +183,14 @@ void* getBuddy(BuddyAllocator* alloc, int target_level){
   #if DEBUG==1
   BitMap_print(&alloc->bitmap);
   #endif
-  return findMemoryPointer(alloc->memory, index, target_level, bucket_size);
+  int* pointer = (int*)findMemoryPointer(alloc->memory, index, target_level, bucket_size);
+  *pointer = index; //i store in pointer[0] his bitamp's index 
+  printf("pointer[0]=%d should be equals to index=%d, also pointer[1]=%d should be a strange number\n", pointer[0], index, pointer[1]);
+  return (void*)pointer;
 }
 
-void* BuddyAllocator_malloc(BuddyAllocator* alloc, int size){
+void* BuddyAllocator_malloc(BuddyAllocator* alloc, int sizeRequested){
+  int size = sizeRequested+sizeof(int); //4 bytes are needed to store the bitmap's index
   if (!size){
     printf("MALLOC: WARNING: you are trying to allocate 0 bytes. You will recieve a NULL pointer!\n");
     return NULL;
@@ -207,15 +211,43 @@ void* BuddyAllocator_malloc(BuddyAllocator* alloc, int size){
   printf("requested: %d bytes, level %d \n", size, level);
 
   //find the correct index
-  void* pointer = getBuddy(alloc, level);
+  int* pointer = (int*)getBuddy(alloc, level);
   if (!pointer){
     printf("MALLOC: Not enough memory! you will recieve a NULL pointer\n");
   }
-  return pointer;
+  return (void*)(pointer+sizeof(int)); //i give him sizeRequested bytes, as he asked
 }
 
 // releases allocated memory (WORK IN PROGRESS)
-void BuddyAllocator_free(BuddyAllocator* alloc, void* mem);
+int checkIfMemoryIsInsideAlloc(BuddyAllocator* alloc, void* mem){
+  int sizeOfMemory = (alloc->min_bucket_size)<<(alloc->num_levels); //in bytes
+  int* startAllocMemory =(int*)(alloc->memory);
+  int* endAllocMemory = startAllocMemory+(sizeOfMemory/sizeof(int)); 
+  if ((int*)mem < startAllocMemory || (int*)mem >= endAllocMemory) return 0; //is out of the buffer
+  return 1; //is inside the buffer
+}
+
+int BuddyAllocator_free(BuddyAllocator* alloc, void* memReleased){
+  //i have to find which index is 
+  int* mem = (int*)memReleased -sizeof(int); //real memory
+  if (!checkIfMemoryIsInsideAlloc(alloc, (void*)mem)){
+    printf("ERROR: FREE: You are trying to free a pointer which isn't inside the allocator's buffer! Nothing will happen\n");
+    return 0; //which will be used to the user to check directly if free function worked
+  }
+  Free_doAllTaskOnBitmap(&alloc->bitmap, index);
+  return 1; //everything went good
+}
+
+//for security reasons, frees the memory and also set all bits to 0
+int BuddyAllocator_HardFree(BuddyAllocator* alloc, void* memReleased){
+  if (!BuddyAllocator_free(alloc, memReleased)) return 0;
+  int index = *mem;
+  int level = fromIndextoLevel(index);
+  int bucket_size = ((alloc->min_bucket_size)<<(alloc->num_levels))>>level;
+  memset(mem, 0, bucket_size); 
+  return 1; //everything went good
+}
+
 
 //print the buddyallocator (WORK IN PROGRESS)
 void BuddyAllocator_print(BuddyAllocator* alloc);
