@@ -2,3 +2,4 @@
 *.exe
 test_bitmap
 test_buddyAllocator
+test_mainBuddyAllocator
