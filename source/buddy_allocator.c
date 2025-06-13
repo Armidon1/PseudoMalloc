@@ -270,6 +270,10 @@ int checkIfMemoryIsInsideAlloc(BuddyAllocator* alloc, void* mem){
 }
 
 int BuddyAllocator_free(BuddyAllocator* alloc, void* memReleased){
+  if (memReleased==NULL) {
+    printf("ERROR: FREE: You are trying to free a NULL pointer! Nothing will happen\n");
+    return -1;
+  }
   //i have to find which index is 
   int* mem = (int*)memReleased -sizeof(int); //real memory
   if (!checkIfMemoryIsInsideAlloc(alloc, (void*)mem)){
