@@ -11,4 +11,4 @@
 
 void myAllocator_init();
 void* myMalloc(int size_requested);
-int myFree(void* pointer);
+int myFree(void* pointer, int size_requested);
