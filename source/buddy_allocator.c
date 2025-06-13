@@ -208,6 +208,7 @@ void* BuddyAllocator_malloc(BuddyAllocator* alloc, int sizeRequested){
   int* pointer = (int*)getBuddy(alloc, level);
   if (!pointer){
     printf("MALLOC: Not enough memory! you will recieve a NULL pointer\n");
+    return NULL;
   }
   return (void*)(pointer+sizeof(int)); //i give him sizeRequested bytes, as he asked
 }
