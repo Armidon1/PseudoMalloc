@@ -66,3 +66,30 @@ int myFree(void* pointer, int size_requested){
         return 0;
     }
 }
+
+int myHardFree(void* pointer, int size_requested){
+    if (pointer == NULL){   
+        printf("ERROR: myFree: the pointer recieved is a NULL pointer!\n");
+        return -1;
+    }
+    if (size_requested <= 0){   
+        printf("ERROR: myFree: the size recieved is %d which is not ok!\n");
+        return -1;
+    }
+
+    int size_requested_for_buddyAllocator = size_requested + sizeof(int);
+    if (myCheck(size_requested_for_buddyAllocator)){
+        if(BuddyAllocator_HardFree(&buddy_allocator, pointer)==-1){
+            printf("ERROR: myFree: something went wrong with BuddyAllocator_free\n");
+            return -1;
+        }
+        return 0;  
+    }
+    else{
+        if (munmap(pointer, size_requested) == -1){ //munmap already destroys everything
+            perror("ERROR: something went wrong with munmap");
+            return -1;
+        }
+        return 0;
+    }
+}
