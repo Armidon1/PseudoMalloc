@@ -282,18 +282,19 @@ int BuddyAllocator_free(BuddyAllocator* alloc, void* memReleased){
   }
   int index =mem[0];
   printf("DEBUG: BuddyAllocator_free: trying to free index=%d\n", index);
-  if (Free_doAllTaskOnBitmap(&alloc->bitmap, index, alloc->num_levels)==-1) return -1; //double free error
+  if (Free_doAllTaskOnBitmap(&alloc->bitmap, index, alloc->num_levels)==-1) return -1; //double free error 
   return 0; //everything went good
 }
 
 //for security reasons, frees the memory and also set all bits to 0
 int BuddyAllocator_HardFree(BuddyAllocator* alloc, void* memReleased){
-  if (!BuddyAllocator_free(alloc, memReleased)) return 0;
-  int* mem = (int*)memReleased; 
-  int index = *mem;
+  int* mem = (int*)memReleased -sizeof(int);
+  int index = mem[0];
+  //printf("INDEX=%d\n", index);
   int level = fromIndextoLevel(index);
   int bucket_size = ((alloc->min_bucket_size)<<(alloc->num_levels))>>level;
-  memset(mem, 0, bucket_size); 
+  memset(memReleased, 0, bucket_size-sizeof(int)); 
+  if (!BuddyAllocator_free(alloc, memReleased)) return 0;
   return 1; //everything went good
 }
 

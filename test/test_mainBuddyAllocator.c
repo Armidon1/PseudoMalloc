@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <stdlib.h>
+#include <string.h>
 
 #include "../headers/buddy_allocator.h"
 
@@ -162,7 +162,50 @@ int main(){
         getchar();
     }
     
-    printf("|FINISHING TESTING|\n");
+    //Testing Hard Free
+    printf("\n\033[1;36mPress ENTER to test Hard Free. Now i'll create a string=\"hello!\" with my buddyAllocator_buddy...\033[0m");
+    getchar();
+    char* string = (char*)BuddyAllocator_malloc(&allocator, 16);
+    if (string) { // Assicurati che l'allocazione sia riuscita
+        strncpy(string, "hello!\n", 16 - 1); // Copia la stringa, lasciando spazio per il terminatore null
+        string[16 - 1] = '\0'; // Assicurati che la stringa sia terminata con null
+        printf("printing string1: %s\n", string);
+    } else {
+        printf("ERROR: Impossible allocate memory!\n");
+    }
+    printf("\n\033[1;36mPress ENTER to free the pointer...\033[0m");
+    getchar();
+    if(BuddyAllocator_free(&allocator, (void*)string)==-1){
+        printf("ERROR: something went wrong with the free!\n");
+    }
+    else printf("OK: String now is free\n");
+    printf("\n\033[1;36mPress ENTER to show the content of string (he is free)...\033[0m");
+    getchar();
+    printf("printing string: ");
+    printf("%s\n",string);
 
+    printf("\n\033[1;36mPress ENTER to do the exact same thing but with HARD free...\033[0m");
+    getchar();
+    char* string2 = (char*)BuddyAllocator_malloc(&allocator, 16);
+    if (string2) { // Assicurati che l'allocazione sia riuscita
+        strncpy(string2, "hello!\n", 16 - 1); // Copia la stringa, lasciando spazio per il terminatore null
+        string2[16 - 1] = '\0'; // Assicurati che la stringa sia terminata con null
+        printf("printing string2: %s\n", string2);
+    } else {
+        printf("ERROR: Impossible allocate memory!\n");
+    }
+    
+    printf("\n\033[1;36mPress ENTER to free the pointer...\033[0m");
+    getchar();
+    if(BuddyAllocator_HardFree(&allocator, (void*)string2)==-1){
+        printf("ERROR: something went wrong with the free!\n");
+    }
+    else printf("OK: String now is Hard free\n");
+    printf("\n\033[1;36mPress ENTER to show the content of string2 (he is HardFree, so the content should be 0)...\033[0m");
+    getchar();
+    printf("printing string2: ");
+    printf("%s\n",string2);
+
+    printf("|FINISHING TESTING|\n");
     return 0;
 }
