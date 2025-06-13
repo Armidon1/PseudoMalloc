@@ -19,7 +19,7 @@ int main(){
     getchar();
     BuddyAllocator_init(&allocator, BUDDY_LEVELS, buffer_bitmap, buffer_size, memory, MIN_BUCKET_SIZE);
     printf("|\33[1;32mBuddy Initializated\033[0m|\n");
-    BitMap_print(&(allocator.bitmap));
+    BuddyAllocator_print(&allocator);
 
     // Alloc min size block
     printf("\n\033[1;36mPress ENTER alloc a block of min_bucket_size_requested=%d...\033[0m", min_bucket_size_requested);
@@ -194,7 +194,7 @@ int main(){
     } else {
         printf("ERROR: Impossible allocate memory!\n");
     }
-    
+
     printf("\n\033[1;36mPress ENTER to free the pointer...\033[0m");
     getchar();
     if(BuddyAllocator_HardFree(&allocator, (void*)string2)==-1){

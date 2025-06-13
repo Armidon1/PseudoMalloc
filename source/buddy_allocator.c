@@ -298,5 +298,14 @@ int BuddyAllocator_HardFree(BuddyAllocator* alloc, void* memReleased){
   return 1; //everything went good
 }
 
-//print the buddyallocator (WORK IN PROGRESS)
-void BuddyAllocator_print(BuddyAllocator* alloc);
+//print the buddyallocator
+void BuddyAllocator_print(BuddyAllocator* alloc){
+  printf("\n--- STATE OF BUDDY ALLOCATOR ---\n");
+  printf("Number of Levels (contains level 0): %d\n", alloc->num_levels);
+  printf("Minimum bucket size: %d bytes\n", alloc->min_bucket_size);
+  //as usual, calc the size of total memory
+  int memory_size = alloc->min_bucket_size * (1 << alloc->num_levels);
+  printf("Total memory size: %d bytes\n", memory_size);
+  BitMap_print(&(alloc->bitmap));
+  printf("----------------------------------\n");
+}
