@@ -8,6 +8,7 @@
 
 //DEBUG
 #define DEBUG 0
+#define SHOW_IN_TEST 1 //needed to show in test some result
 
 //Aux functions
 int fromIndextoLevel(size_t index){
@@ -179,7 +180,7 @@ void* getBuddy(BuddyAllocator* alloc, int target_level){
   #endif
   int* pointer = (int*)findMemoryPointer(alloc->memory, index, target_level, bucket_size);
   *pointer = index; //i store in pointer[0] his bitamp's index 
-  printf("DEBUG: MALLOC_GetBuddy: pointer[0]=%d should be equals to index=%d, also pointer[1]=%d should be a strange number\n", pointer[0], index, pointer[1]);
+  //printf("DEBUG: MALLOC_GetBuddy: pointer[0]=%d should be equals to index=%d, also pointer[1]=%d should be a strange number\n", pointer[0], index, pointer[1]);
   return (void*)pointer;
 }
 
@@ -196,14 +197,12 @@ void* BuddyAllocator_malloc(BuddyAllocator* alloc, int sizeRequested){
   }
   int level = fromSizeToLevel(size, alloc);
 
-  #if DEBUG == 1
-  printf("DEBUG: MALLOC richiesta size=%d, livello=%d\n", size, level);
-  #endif
-
   // if the level is too small, we pad it to max
   if (level>alloc->num_levels) level=alloc->num_levels; //useless check, implemented fromSizeToLevel which already pad it to max
-  printf("requested: %d bytes, level %d \n", size, level);
-
+  
+  #if DEBUG==1 || SHOW_IN_TEST == 1
+    printf("DEBUG: BuddyAllocator_malloc: requested: %d bytes, level %d \n", size, level);
+  #endif
   //find the correct index
   int* pointer = (int*)getBuddy(alloc, level);
   if (!pointer){
@@ -281,7 +280,9 @@ int BuddyAllocator_free(BuddyAllocator* alloc, void* memReleased){
     return -1; //which will be used to the user to check directly if free function worked
   }
   int index =mem[0];
-  printf("DEBUG: BuddyAllocator_free: trying to free index=%d\n", index);
+  #if DEBUG==1 || SHOW_IN_TEST == 1
+    printf("DEBUG: BuddyAllocator_free: trying to free index=%d\n", index);
+  #endif
   if (Free_doAllTaskOnBitmap(&alloc->bitmap, index, alloc->num_levels)==-1) return -1; //double free error 
   return 0; //everything went good
 }

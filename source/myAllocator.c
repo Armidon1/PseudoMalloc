@@ -5,6 +5,8 @@
 
 #include "../headers/myAllocator.h" 
 
+#define SHOW_IN_TEST 1
+
 BitMap bitmap;
 char buffer_bitmap[BITMAP_BUFFER_SIZE];
 BuddyAllocator buddy_allocator;
@@ -35,7 +37,9 @@ void* myMalloc(int size_requested){
             perror("ERROR: MMAP failed!"); // also prints a message which describe the error contained in errno 
             return NULL;
         }
-        printf("OK: Poiter allocated memory with mmap\n");
+        #if SHOW_IN_TEST == 1
+            printf("OK: Poiter allocated memory with mmap\n");
+        #endif
         return pointer;
     }
     
@@ -63,6 +67,9 @@ int myFree(void* pointer, int size_requested){
             perror("ERROR: something went wrong with munmap");
             return -1;
         }
+        #if SHOW_IN_TEST == 1
+            printf("OK: Poiter free with munmap\n");
+        #endif
         return 0;
     }
 }
@@ -90,6 +97,9 @@ int myHardFree(void* pointer, int size_requested){
             perror("ERROR: something went wrong with munmap");
             return -1;
         }
+        #if SHOW_IN_TEST == 1
+            printf("OK: Poiter free with munmap\n");
+        #endif
         return 0;
     }
 }
