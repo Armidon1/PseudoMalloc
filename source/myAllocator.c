@@ -15,7 +15,7 @@ int myCheck(int size_requested_for_buddyAllocator){
     return size_requested_for_buddyAllocator<=PAGE_SIZE/4;
 }
 
-
+__attribute__((constructor)) //this helps the user because initialize myAllocator before main()
 void myAllocator_init(){ //my buddyAllocator_init already does everything 
     BuddyAllocator_init(&buddy_allocator, BUDDY_LEVELS, buffer_bitmap, BITMAP_BUFFER_SIZE, memory, MIN_BUCKET_SIZE);
 }
@@ -24,9 +24,9 @@ void* myMalloc(int size_requested){
         printf("ERROR: myAllocator:malloc: requested size=%d<0. Returned NULL pointer.\n",size_requested);
         return NULL;
     }
-    int size_requested_for_buddyAllocator = size_requested+sizeof(int);
-    if (myCheck(size_requested_for_buddyAllocator)){
-        return BuddyAllocator_malloc(&buddy_allocator, size_requested_for_buddyAllocator); //my buddyAllocator_malloc already handles errors and returns NULL
+    //int size_requested_for_buddyAllocator = size_requested+sizeof(int); 
+    if (myCheck(size_requested)){
+        return BuddyAllocator_malloc(&buddy_allocator, size_requested); //my buddyAllocator_malloc already handles errors and returns NULL
     }
     else{ //So here we use mmap
         void *pointer = mmap(NULL, size_requested, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
