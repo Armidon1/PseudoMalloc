@@ -187,9 +187,9 @@ int main(){
     printf("\n\033[1;36mPress ENTER to do the exact same thing but with HARD free...\033[0m");
     getchar();
     char* string2 = (char*)BuddyAllocator_malloc(&allocator, 16);
-    if (string2) { // Assicurati che l'allocazione sia riuscita
-        strncpy(string2, "hello!\n", 16 - 1); // Copia la stringa, lasciando spazio per il terminatore null
-        string2[16 - 1] = '\0'; // Assicurati che la stringa sia terminata con null
+    if (string2) { 
+        strncpy(string2, "hello!\n", 16 - 1); 
+        string2[16 - 1] = '\0'; 
         printf("printing string2: %s\n", string2);
     } else {
         printf("ERROR: Impossible allocate memory!\n");
