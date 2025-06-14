@@ -11,8 +11,8 @@ BuddyAllocator buddy_allocator;
 char memory[MEMORY_SIZE];
 
 //AUX
-int myCheck(int size_requested_for_buddyAllocator){
-    return size_requested_for_buddyAllocator<=PAGE_SIZE/4;
+int myCheck(int size_requested){
+    return size_requested<=PAGE_SIZE/4;
 }
 
 __attribute__((constructor)) //this helps the user because initialize myAllocator before main()
@@ -46,12 +46,12 @@ int myFree(void* pointer, int size_requested){
         return -1;
     }
     if (size_requested <= 0){   
-        printf("ERROR: myFree: the size recieved is %d which is not ok!\n");
+        printf("ERROR: myFree: the size recieved is %d which is not ok!\n", size_requested);
         return -1;
     }
 
-    int size_requested_for_buddyAllocator = size_requested + sizeof(int);
-    if (myCheck(size_requested_for_buddyAllocator)){
+    //int size_requested_for_buddyAllocator = size_requested + sizeof(int);
+    if (myCheck(size_requested)){
         if(BuddyAllocator_free(&buddy_allocator, pointer)==-1){
             printf("ERROR: myFree: something went wrong with BuddyAllocator_free\n");
             return -1;
@@ -73,12 +73,12 @@ int myHardFree(void* pointer, int size_requested){
         return -1;
     }
     if (size_requested <= 0){   
-        printf("ERROR: myFree: the size recieved is %d which is not ok!\n");
+        printf("ERROR: myFree: the size recieved is %d which is not ok!\n", size_requested);
         return -1;
     }
 
-    int size_requested_for_buddyAllocator = size_requested + sizeof(int);
-    if (myCheck(size_requested_for_buddyAllocator)){
+    //int size_requested_for_buddyAllocator = size_requested + sizeof(int);
+    if (myCheck(size_requested)){
         if(BuddyAllocator_HardFree(&buddy_allocator, pointer)==-1){
             printf("ERROR: myFree: something went wrong with BuddyAllocator_free\n");
             return -1;
