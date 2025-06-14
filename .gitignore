@@ -3,3 +3,4 @@
 test_bitmap
 test_buddyAllocator
 test_mainBuddyAllocator
+test_myAllocator
