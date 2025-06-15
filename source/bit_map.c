@@ -20,13 +20,13 @@ void BitMap_init(BitMap* bit_map, int num_bits, uint8_t* buffer){
 // status= 0 or 1
 void BitMap_setBit(BitMap* bit_map, int bit_num, int status){
   int byte_num = bit_num >> 3; //bit_num/8 = which byte is 
-  if (byte_num >= bit_map->buffer_size){  //check if we are inside the buffer
-    fprintf(stderr,"byte_num=%d is higher or equal than bit_map->buffer_size=%d\n", byte_num, bit_map->buffer_size);
-    return;
+  if (byte_num >= bit_map->buffer_size)  //check if we are inside the buffer
+    fprintf(stderr,"byte_num=%d is higher or equal than bit_map->buffer_size=%d\n", byte_num, bit_map->buffer_size); 
+  else{
+    int bit_in_byte = 7 - (bit_num % 8);  //finding which bit is inside the byte
+    if (status) bit_map->buffer[byte_num] |= (1 << bit_in_byte); //set bit 1 in location bit_in_byte
+    else  bit_map->buffer[byte_num] &= ~(1 << bit_in_byte); //set bit 0 in location bit_in_byte
   }
-  int bit_in_byte = 7 - (bit_num % 8);  //finding which bit is inside the byte
-  if (status) bit_map->buffer[byte_num] |= (1 << bit_in_byte); //set bit 1 in location bit_in_byte
-  else  bit_map->buffer[byte_num] &= ~(1 << bit_in_byte); //set bit 0 in location bit_in_byte
 }
 
 // inspects the status of the bit bit_num
@@ -34,7 +34,7 @@ int BitMap_bit(const BitMap* bit_map, int bit_num){
   int byte_num = bit_num >> 3;              //bit_num/8 = which byte is 
   if (byte_num >= bit_map->buffer_size){    //check if we are inside the buffer
     fprintf(stderr,"byte_num=%d is higher or equal than bit_map->buffer_size=%d\n", byte_num, bit_map->buffer_size);
-    return;
+    return -1;
   }
   int bit_in_byte = 7 - (bit_num % 8);  //finding which bit is inside the byte;
   return (bit_map->buffer[byte_num] & (1 << bit_in_byte)) != 0;
