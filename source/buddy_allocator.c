@@ -15,15 +15,6 @@ int fromIndextoLevel(size_t index){
   if (index == 0) return 0;
   int level = (int)floor(log2(index+1));
   return level;
-  // int level = 0;
-  // int nodes = 1;
-  // int i = 0;
-  // while (i + nodes <= (int)index) {
-  //     i += nodes;
-  //     nodes <<= 1;
-  //     level++;
-  // }
-  // return level;
 };
   
 int buddyIndex(int index){
@@ -100,17 +91,9 @@ void BuddyAllocator_init(BuddyAllocator* alloc,int num_levels, char* buffer, int
 
 // MALLOC ZONE
 void* findMemoryPointer(void* memory, int indexBuddy, int target_level, int bucket_size) {
-  //working
-  // void* start_point = memory;
-  // int currentIndex = indexBuddy+1;
-  // int indexes_in_level_target_before = maxNumIndexesFromLevel(target_level);
-  // int indexBuddy_in_target_level = currentIndex - indexes_in_level_target_before;
-  // start_point += bucket_size*(indexBuddy_in_target_level - 1);
-  // return start_point;
-  
-  int first_index = (1 << target_level) - 1;
-  int indexBuddy_in_target_level = indexBuddy - first_index;
-  void* pointer =(uint8_t*)memory + bucket_size * indexBuddy_in_target_level;
+  int first_index = (1 << target_level) - 1; 
+  int indexBuddy_in_target_level = indexBuddy - first_index; //normalize the relative index to the level
+  void* pointer =(uint8_t*)memory + (bucket_size * indexBuddy_in_target_level);
   #if DEBUG ==1
   printf("DEBUG:MALLOC: indexBuddy=%d, target_level=%d,bucket_size=%d, pointer=%p\n",indexBuddy, target_level, bucket_size, pointer);
   #endif
