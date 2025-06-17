@@ -4,7 +4,7 @@
 
 int main(){
     //creating a bitmap
-    int num_bits = 8; //just one byte
+    int num_bits = 7; //just one byte, includes 0
     int buffer_size = BitMap_getBytes(num_bits);
     uint8_t buffer[buffer_size];
     BitMap bm;
