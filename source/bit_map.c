@@ -23,7 +23,7 @@ void BitMap_setBit(BitMap* bit_map, int bit_num, int status){
   if (byte_num >= bit_map->buffer_size)  //check if we are inside the buffer
     fprintf(stderr,"byte_num=%d is higher or equal than bit_map->buffer_size=%d\n", byte_num, bit_map->buffer_size); 
   else{
-    int bit_in_byte = 7 - (bit_num % 8);  //finding which bit is inside the byte
+    int bit_in_byte = 7 - (bit_num % 8);  //finding which bit is inside the byte, in particular im iterating the byte from left to right: needed for a correct print
     if (status) bit_map->buffer[byte_num] |= (1 << bit_in_byte); //set bit 1 in location bit_in_byte
     else  bit_map->buffer[byte_num] &= ~(1 << bit_in_byte); //set bit 0 in location bit_in_byte
   }
@@ -36,7 +36,7 @@ int BitMap_bit(const BitMap* bit_map, int bit_num){
     fprintf(stderr,"byte_num=%d is higher or equal than bit_map->buffer_size=%d\n", byte_num, bit_map->buffer_size);
     return -1;
   }
-  int bit_in_byte = 7 - (bit_num % 8);  //finding which bit is inside the byte;
+  int bit_in_byte = 7 - (bit_num % 8);  //finding which bit is inside the byte, in particular im iterating the byte from left to right: needed for a correct print
   return (bit_map->buffer[byte_num] & (1 << bit_in_byte)) != 0;
 }
 
@@ -47,10 +47,7 @@ void BitMap_print(BitMap* bit_map){
   int nodes_in_level = 1;
   int printed = 0;
   for (int i = 0; i < bit_map->num_bits; i++) {
-    int byte_num = i / 8;   //I take the byte cell
-    int bit_in_byte = 7 - (i % 8);    //i take the extra bits, in particular im iterating the byte from left to right: needed for a correct print
-    int bit = (bit_map->buffer[byte_num] >> bit_in_byte) & 1;
-    printf("%d", bit);
+    printf("%d", BitMap_bit(bit_map, i));
     printed++;
     if (printed == nodes_in_level) {
       printf("\n");
