@@ -35,7 +35,7 @@ int main(){
     //testing myFree which should use BuddyAllocator
     printf("\n\033[1;36mNow i free those size=%d. Press ENTER to continue!...\033[0m", size);
     getchar();
-    if (myFree(pointer, size)==-1){
+    if (myFree(pointer)==-1){
         printf("\33[1;31mERROR\033[0m: Something went wrong when i'm freeing those size=%d!\n", size);
         return 1;
     }
@@ -55,7 +55,7 @@ int main(){
     //testing free of limits size to check if i'm using BuddyAllocator_free
     printf("\n\033[1;36mNow i free those size=%d. Press ENTER to continue!...\033[0m", size);
     getchar();
-    if (myFree(pointer, size)==-1){
+    if (myFree(pointer)==-1){
         printf("\33[1;31mERROR\033[0m: Something went wrong when i'm freeing those size=%d!\n", size);
         return 1;
     }
@@ -75,7 +75,7 @@ int main(){
     //testing free of munmap
     printf("\n\033[1;36mNow i free those size=%d. Press ENTER to continue!...\033[0m", size);
     getchar();
-    if (myFree(pointer, size)==-1){
+    if (myFree(pointer)==-1){
         printf("\33[1;31mERROR\033[0m: Something went wrong when i'm freeing those size=%d!\n", size);
         return 1;
     }
@@ -92,7 +92,7 @@ int main(){
     printf("created a String: %s\n", string);
     printf("\n\033[1;36mPress ENTER to destroy that innocent string...\033[0m");
     getchar();
-    if (myHardFree((void*)string, size)==-1){
+    if (myHardFree((void*)string)==-1){
         printf("\33[1;31mERROR\033[0m: Something went wrong when i'm freeing those size=%d!\n", size);
         return 1;
     }
