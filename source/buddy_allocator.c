@@ -168,11 +168,12 @@ void* getBuddy(BuddyAllocator* alloc, int target_level){
 }
 
 void* BuddyAllocator_malloc(BuddyAllocator* alloc, int sizeRequested){
-  int size = sizeRequested+sizeof(int); //4 bytes are needed to store the bitmap's index
-  if (!size){
+  if (!sizeRequested){
     printf("MALLOC: WARNING: you are trying to allocate 0 bytes. You will recieve a NULL pointer!\n");
     return NULL;
   }
+  int size = sizeRequested+sizeof(int); //4 bytes are needed to store the bitmap's index
+  
   int mem_size=(1<<alloc->num_levels)*alloc->min_bucket_size; // we determine the level of the page
   if (size>mem_size){
     printf("MALLOC: WARNING: too big allocation: requested:%d and the allocator have %d. You will recieve a NULL pointer!\n",size, mem_size);
